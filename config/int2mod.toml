@@ -1,0 +1,8 @@
+[train_params]
+epochs = 200
+base_dir = "/data/PINN"
+learning_rate = 0.0005
+batch_size = 49152
+
+[wandb_params]
+run_name = "int2mod_densenet_128"

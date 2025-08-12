@@ -1,0 +1,8 @@
+[train_params]
+epochs = 25
+base_dir = "/data/PINN"
+learning_rate = 0.002
+batch_size = 12288
+
+[wandb_params]
+run_name = "rhstart_resnet_v1"

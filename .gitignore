@@ -1,0 +1,22 @@
+# ignore all trained neural networks
+*.keras
+Opacity/*.keras
+wandb
+Playground.ipynb
+*.code-workspace
+gifs
+.ipynb_checkpoints
+
+# ignore all images
+*.png
+*.pdf
+
+# ignore image directories
+imag_*
+
+# ignore python cache
+__pycache__/*
+
+# ignore macos stuff
+.DS_Store
+

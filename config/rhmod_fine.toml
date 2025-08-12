@@ -1,0 +1,8 @@
+[train_params]
+epochs = 100
+base_dir = "/data/PINN"
+learning_rate = 0.0002
+batch_size = 102400
+
+[wandb_params]
+run_name = "rhmod_fine_resnet_v1"
