@@ -1,0 +1,205 @@
+version: "3.8"
+services:
+  jupyter:
+    build:
+      context: ./
+      dockerfile: dockerfiles/jupyter.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    ports:
+      - "9090:9090"
+  bifnn:
+    build:
+      context: ./
+      dockerfile: dockerfiles/bifnn.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_API_KEY>
+      - WANDB_ENTITY=<WANDB_API_KEY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python bifnn.py -o bifnn_densenet_128.keras'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  bifnn_y100:
+    build:
+      context: ./
+      dockerfile: dockerfiles/bifnn.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python bifnn.py -o bifnn_y100_densenet_128.keras -y 100'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  contimag:
+    build:
+      context: ./
+      dockerfile: dockerfiles/contimag.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python contimag.py -i /data/PINN/outputs/bifnn_y100_densenet_128.keras -d /data/PINN/images/imag_bifrost_y100_densenet_128 -p densenet_y100_128'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  opacity:
+    build:
+      context: ./
+      dockerfile: dockerfiles/opacity.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python Opacity/opacity_nn_500nm.py'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  int2mod:
+    build:
+      context: ./
+      dockerfile: dockerfiles/int2mod.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python int2mod.py -y 100 -i imag_bifrost_y100_densenet_128 -o int2mod_densenet_128.keras'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  strat:
+    build:
+      context: ./
+      dockerfile: dockerfiles/strat.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python strat.py'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  rhstart:
+    build:
+      context: ./
+      dockerfile: dockerfiles/rhstart.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python rhstart.py -m imag_bifrost_densenet_128 -n int2mod_densenet_128.keras -o rhstart_densenet_128.keras'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  rhmod_coarse:
+    build:
+      context: ./
+      dockerfile: dockerfiles/rhmod.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python rhmod.py -s 2 -m imag_bifrost_densenet_128 -o rhmod_densenet_s2.keras -z strat.keras -i rhstart_densenet_128.keras'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  rhmod_fine:
+    build:
+      context: ./
+      dockerfile: dockerfiles/rhmod.dockerfile
+    ipc: host
+    tty: true
+    stdin_open: true
+    environment:
+      - WANDB_API_KEY=<WANDB_API_KEY>
+      - WANDB_PROJECT=<WANDB_PROJECT>
+      - WANDB_ENTITY=<WANDB_ENTITY>
+    volumes:
+      - /data/PINN/:/data/PINN/
+      - /home/spandian1/rhpinn:/app
+    command: 'python rhmod.py -m imag_bifrost_densenet_128 -i rhmod_densenet_s2.keras -o rhmod_densenet_s1.keras -z strat.keras'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  

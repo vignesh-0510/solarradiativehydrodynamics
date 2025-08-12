@@ -5,7 +5,7 @@ Modeling Solar Radiative Hydrodynamics using ResneNet and DenseNet-inspired Phys
 This project was originally based on the work from the repository:
 
 > **[rhpinn: Radiative Hydrodynamics Physics Informed Neural Network](https://github.com/cukeller/rhpinn)**  
-> Copyright © [Original Author Name(s)]
+> Copyright © [Cristoph U. Keller]
 
 ## Requirements
 
